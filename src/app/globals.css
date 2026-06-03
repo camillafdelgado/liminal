@@ -1,0 +1,218 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glow-accent {
+    box-shadow:
+      0 0 24px color-mix(in srgb, var(--accent) 25%, transparent),
+      0 0 48px color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  .terminal-grid {
+    background-image:
+      linear-gradient(
+        color-mix(in srgb, var(--accent) 4%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--accent) 4%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 48px 48px;
+  }
+
+  .detect-warning {
+    --border: rgba(196, 74, 74, 0.35);
+  }
+
+  .glow-warning {
+    box-shadow:
+      0 0 24px color-mix(in srgb, var(--destructive) 20%, transparent),
+      inset 0 0 32px color-mix(in srgb, var(--destructive) 5%, transparent);
+  }
+
+  .event-log {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--accent) 30%, transparent)
+      transparent;
+  }
+}
+
+@layer base {
+  .theme {
+    --font-heading: var(--font-mono);
+    --font-sans: var(--font-geist-sans);
+  }
+
+  :root {
+    --background: #0f0d0b;
+    --foreground: #f2ede4;
+    --accent: #e88b4f;
+    --accent-muted: #c46a32;
+    --rust: #8b4513;
+    --rust-deep: #3d2a1f;
+    --warm-gray: #6b5d52;
+    --glow: rgba(232, 139, 79, 0.15);
+
+    --card: #171310;
+    --card-foreground: #f2ede4;
+    --popover: #171310;
+    --popover-foreground: #f2ede4;
+    --primary: #e88b4f;
+    --primary-foreground: #0f0d0b;
+    --secondary: #231f1b;
+    --secondary-foreground: #f2ede4;
+    --muted: #1a1714;
+    --muted-foreground: #9a8f84;
+    --accent-foreground: #0f0d0b;
+    --destructive: #c44a4a;
+    --border: rgba(232, 139, 79, 0.12);
+    --input: rgba(232, 139, 79, 0.08);
+    --ring: #e88b4f;
+    --chart-human: #e88b4f;
+    --chart-ai: #3d2a1f;
+    --chart-1: #e88b4f;
+    --chart-2: #c46a32;
+    --chart-3: #8b4513;
+    --chart-4: #6b4423;
+    --chart-5: #3d2a1f;
+    --radius: 0.5rem;
+    --sidebar: #171310;
+    --sidebar-foreground: #f2ede4;
+    --sidebar-primary: #e88b4f;
+    --sidebar-primary-foreground: #0f0d0b;
+    --sidebar-accent: #231f1b;
+    --sidebar-accent-foreground: #f2ede4;
+    --sidebar-border: rgba(232, 139, 79, 0.12);
+    --sidebar-ring: #e88b4f;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "ss02";
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-heading {
+    @apply font-mono tracking-tight;
+  }
+}
+
+/* Signal monitor — kept outside @layer so Tailwind doesn't strip nested rules */
+.signal-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid transparent;
+}
+
+.signal-ring--outer {
+  width: 280px;
+  height: 280px;
+}
+
+.signal-ring--mid {
+  width: 220px;
+  height: 220px;
+}
+
+.signal-ring--inner {
+  width: 160px;
+  height: 160px;
+}
+
+.signal-ring--human {
+  border-color: color-mix(in srgb, #6b8f71 50%, transparent);
+  animation: ring-pulse-human 3.5s ease-in-out infinite;
+}
+
+.signal-ring--anomaly {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  animation: ring-pulse-anomaly 1.8s ease-in-out infinite;
+}
+
+.signal-ring--ai {
+  border-color: color-mix(in srgb, var(--destructive) 80%, transparent);
+  animation: ring-flash-ai 0.6s ease-in-out infinite;
+}
+
+.signal-label--human {
+  color: #6b8f71;
+  text-shadow: 0 0 16px color-mix(in srgb, #6b8f71 50%, transparent);
+}
+
+.signal-label--anomaly {
+  color: var(--accent);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.signal-label--ai {
+  color: var(--destructive);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--destructive) 50%, transparent);
+}
+
+@keyframes ring-pulse-human {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.35;
+    box-shadow: 0 0 20px color-mix(in srgb, #6b8f71 15%, transparent);
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.7;
+    box-shadow: 0 0 40px color-mix(in srgb, #6b8f71 25%, transparent);
+  }
+}
+
+@keyframes ring-pulse-anomaly {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+    box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.85;
+    box-shadow: 0 0 48px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+}
+
+@keyframes ring-flash-ai {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+    box-shadow: 0 0 16px color-mix(in srgb, var(--destructive) 20%, transparent);
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+    box-shadow: 0 0 56px color-mix(in srgb, var(--destructive) 45%, transparent);
+  }
+}
