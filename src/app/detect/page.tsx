@@ -15,7 +15,7 @@ const STATE_LABELS: Record<SignalState, string> = {
 
 function RingVisualizer({ state }: { state: SignalState }) {
   return (
-    <div className="relative flex items-center justify-center py-8">
+    <div className="signal-ring-stage">
       <div
         className={`signal-ring signal-ring--outer signal-ring--${state}`}
         aria-hidden
@@ -28,13 +28,13 @@ function RingVisualizer({ state }: { state: SignalState }) {
         className={`signal-ring signal-ring--inner signal-ring--${state}`}
         aria-hidden
       />
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="signal-ring-stage__label">
         <span
-          className={`font-mono text-xs uppercase tracking-[0.35em] signal-label--${state}`}
+          className={`font-mono text-[10px] uppercase tracking-[0.2em] sm:text-xs sm:tracking-[0.35em] signal-label--${state}`}
         >
           {STATE_LABELS[state]}
         </span>
-        <span className="mt-3 font-mono text-[10px] text-muted-foreground">
+        <span className="mt-2 font-mono text-[10px] text-muted-foreground sm:mt-3">
           ring.sync.active
         </span>
       </div>
@@ -164,7 +164,7 @@ export default function SignalMonitorPage() {
           )}
         </section>
 
-        <section className="mb-8 rounded-lg border border-border/60 bg-card/50 p-6 backdrop-blur-sm">
+        <section className="mb-8 overflow-hidden rounded-lg border border-border/60 bg-card/50 px-4 py-6 backdrop-blur-sm sm:px-6 sm:py-8">
           <RingVisualizer state={signalState} />
         </section>
 

@@ -191,6 +191,49 @@
   pointer-events: none;
 }
 
+.signal-ring-stage {
+  position: relative;
+  width: min(100%, clamp(11rem, 68vw, 20rem));
+  aspect-ratio: 1;
+  margin-inline: auto;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.signal-ring-stage .signal-ring--outer {
+  width: 76%;
+  height: 76%;
+  top: 12%;
+  left: 12%;
+}
+
+.signal-ring-stage .signal-ring--mid {
+  width: 58%;
+  height: 58%;
+  top: 21%;
+  left: 21%;
+}
+
+.signal-ring-stage .signal-ring--inner {
+  width: 40%;
+  height: 40%;
+  top: 30%;
+  left: 30%;
+}
+
+.signal-ring-stage__label {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  text-align: center;
+  pointer-events: none;
+}
+
 .signal-ring--human {
   border-color: color-mix(in srgb, #6b8f71 50%, transparent);
   animation: ring-pulse-human 3.5s ease-in-out infinite;
@@ -226,12 +269,12 @@
   100% {
     transform: scale(1);
     opacity: 0.35;
-    box-shadow: 0 0 20px color-mix(in srgb, #6b8f71 15%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, #6b8f71 15%, transparent);
   }
   50% {
-    transform: scale(1.04);
+    transform: scale(1.03);
     opacity: 0.7;
-    box-shadow: 0 0 40px color-mix(in srgb, #6b8f71 25%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, #6b8f71 25%, transparent);
   }
 }
 
@@ -240,12 +283,12 @@
   100% {
     transform: scale(1);
     opacity: 0.45;
-    box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 20%, transparent);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 20%, transparent);
   }
   50% {
-    transform: scale(1.06);
+    transform: scale(1.04);
     opacity: 0.85;
-    box-shadow: 0 0 48px color-mix(in srgb, var(--accent) 35%, transparent);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 35%, transparent);
   }
 }
 
@@ -254,11 +297,11 @@
   100% {
     transform: scale(1);
     opacity: 0.5;
-    box-shadow: 0 0 16px color-mix(in srgb, var(--destructive) 20%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--destructive) 20%, transparent);
   }
   50% {
-    transform: scale(1.08);
+    transform: scale(1.05);
     opacity: 1;
-    box-shadow: 0 0 56px color-mix(in srgb, var(--destructive) 45%, transparent);
+    box-shadow: 0 0 28px color-mix(in srgb, var(--destructive) 45%, transparent);
   }
 }
