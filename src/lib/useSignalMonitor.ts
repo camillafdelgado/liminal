@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { triggerDetectionHaptic } from "@/lib/haptics";
+import { triggerAnomalyHaptic, triggerShockHaptic } from "@/lib/haptics";
 
 export type SignalState = "human" | "anomaly" | "ai";
 
@@ -12,11 +12,22 @@ export type FlaggedEvent = {
   confidence: number;
 };
 
+export type PasteWarning = {
+  sessionAiPercent: number;
+  pledge: number;
+};
+
+type WeightSnapshot = {
+  humanWeight: number;
+  aiWeight: number;
+};
+
 const PAUSE_THRESHOLD_MS = 3000;
 const BURST_CHARS = 15;
 const BURST_WINDOW_MS = 900;
 const FAST_TYPING_CPS = 11;
 const STATE_DECAY_MS = 4000;
+const FLAG_COOLDOWN_MS = 2500;
 
 function formatLogTime(date: Date): string {
   return date.toLocaleTimeString("en-US", {
@@ -33,11 +44,21 @@ function computeHumanPercent(humanWeight: number, aiWeight: number): number {
   return Math.round((humanWeight / total) * 100);
 }
 
-export function useSignalMonitor() {
+function computeAiPercent(humanWeight: number, aiWeight: number): number {
+  return 100 - computeHumanPercent(humanWeight, aiWeight);
+}
+
+export function useSignalMonitor(monthlyPledge: number) {
   const [signalState, setSignalState] = useState<SignalState>("human");
   const [events, setEvents] = useState<FlaggedEvent[]>([]);
   const [sessionHumanPercent, setSessionHumanPercent] = useState(100);
   const [hasSessionActivity, setHasSessionActivity] = useState(false);
+  const [isTextareaLocked, setIsTextareaLocked] = useState(false);
+  const [showBreachModal, setShowBreachModal] = useState(false);
+  const [shockwaveActive, setShockwaveActive] = useState(false);
+  const [sessionBreached, setSessionBreached] = useState(false);
+  const [pasteWarning, setPasteWarning] = useState<PasteWarning | null>(null);
+  const [breachFlashActive, setBreachFlashActive] = useState(false);
 
   const humanWeightRef = useRef(1);
   const aiWeightRef = useRef(0);
@@ -48,38 +69,51 @@ export function useSignalMonitor() {
   const stateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pauseDetectedRef = useRef(false);
   const lastFlaggedRef = useRef<number>(0);
+  const preBreachWeightsRef = useRef<WeightSnapshot | null>(null);
 
-  const FLAG_COOLDOWN_MS = 2500;
+  const maxAiPercent = 100 - monthlyPledge;
 
-  const updateSessionPercent = useCallback(() => {
-    setSessionHumanPercent(
-      computeHumanPercent(humanWeightRef.current, aiWeightRef.current)
-    );
+  const applyWeights = useCallback((humanWeight: number, aiWeight: number) => {
+    humanWeightRef.current = humanWeight;
+    aiWeightRef.current = aiWeight;
+    setSessionHumanPercent(computeHumanPercent(humanWeight, aiWeight));
+  }, []);
+
+  const appendEvent = useCallback((type: string, confidence: number) => {
+    const entry: FlaggedEvent = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      timestamp: new Date(),
+      type,
+      confidence,
+    };
+
+    setEvents((prev) => [entry, ...prev].slice(0, 50));
+    setHasSessionActivity(true);
+    return entry;
+  }, []);
+
+  const scheduleSignalDecay = useCallback((state: SignalState) => {
+    setSignalState(state);
+
+    if (stateTimeoutRef.current) {
+      clearTimeout(stateTimeoutRef.current);
+    }
+
+    stateTimeoutRef.current = setTimeout(() => {
+      setSignalState("human");
+    }, STATE_DECAY_MS);
   }, []);
 
   const pushEvent = useCallback(
     (type: string, confidence: number, state: SignalState) => {
-      const entry: FlaggedEvent = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        timestamp: new Date(),
-        type,
-        confidence,
-      };
+      appendEvent(type, confidence);
+      scheduleSignalDecay(state);
 
-      setEvents((prev) => [entry, ...prev].slice(0, 50));
-      setHasSessionActivity(true);
-      setSignalState(state);
-      triggerDetectionHaptic(state);
-
-      if (stateTimeoutRef.current) {
-        clearTimeout(stateTimeoutRef.current);
+      if (state === "anomaly") {
+        triggerAnomalyHaptic();
       }
-
-      stateTimeoutRef.current = setTimeout(() => {
-        setSignalState("human");
-      }, STATE_DECAY_MS);
     },
-    []
+    [appendEvent, scheduleSignalDecay]
   );
 
   const registerSignal = useCallback(
@@ -95,19 +129,103 @@ export function useSignalMonitor() {
 
       humanWeightRef.current += humanContribution;
       aiWeightRef.current += aiContribution;
-
-      updateSessionPercent();
+      setSessionHumanPercent(
+        computeHumanPercent(humanWeightRef.current, aiWeightRef.current)
+      );
       pushEvent(type, aiConfidence, state);
     },
-    [pushEvent, updateSessionPercent]
+    [pushEvent]
   );
 
-  const handlePaste = useCallback(() => {
-    const confidence = 85 + Math.floor(Math.random() * 11);
-    registerSignal(confidence, "PASTE EVENT", "ai");
-  }, [registerSignal]);
+  const processPaste = useCallback(
+    (confidence: number) => {
+      const humanContribution = (100 - confidence) / 100;
+      const aiContribution = confidence / 100;
+
+      const projectedHuman = humanWeightRef.current + humanContribution;
+      const projectedAi = aiWeightRef.current + aiContribution;
+      const projectedAiPercent = computeAiPercent(projectedHuman, projectedAi);
+
+      const crossesThreshold = projectedAiPercent >= maxAiPercent;
+
+      if (!crossesThreshold) {
+        applyWeights(projectedHuman, projectedAi);
+        appendEvent("PASTE EVENT", confidence);
+        setHasSessionActivity(true);
+        scheduleSignalDecay("anomaly");
+        setPasteWarning({
+          sessionAiPercent: projectedAiPercent,
+          pledge: monthlyPledge,
+        });
+        triggerAnomalyHaptic();
+
+        return { breached: false as const, projectedAiPercent };
+      }
+
+      preBreachWeightsRef.current = {
+        humanWeight: humanWeightRef.current,
+        aiWeight: aiWeightRef.current,
+      };
+
+      applyWeights(projectedHuman, projectedAi);
+      appendEvent("PASTE EVENT", confidence);
+      setHasSessionActivity(true);
+      setSignalState("ai");
+      setPasteWarning(null);
+      setIsTextareaLocked(true);
+      setShowBreachModal(true);
+      setShockwaveActive(true);
+      setBreachFlashActive(true);
+      triggerShockHaptic();
+
+      if (stateTimeoutRef.current) {
+        clearTimeout(stateTimeoutRef.current);
+      }
+
+      setTimeout(() => setShockwaveActive(false), 2400);
+
+      return { breached: true as const, projectedAiPercent };
+    },
+    [
+      appendEvent,
+      applyWeights,
+      maxAiPercent,
+      monthlyPledge,
+      scheduleSignalDecay,
+    ]
+  );
+
+  const resolveBreachRedo = useCallback(() => {
+    const snapshot = preBreachWeightsRef.current;
+    if (snapshot) {
+      applyWeights(snapshot.humanWeight, snapshot.aiWeight);
+    }
+
+    preBreachWeightsRef.current = null;
+    setIsTextareaLocked(false);
+    setShowBreachModal(false);
+    setBreachFlashActive(false);
+    setShockwaveActive(false);
+    scheduleSignalDecay("anomaly");
+  }, [applyWeights, scheduleSignalDecay]);
+
+  const resolveBreachAccept = useCallback(
+    (confidence: number) => {
+      appendEvent("PLEDGE BREACH — session flagged", confidence);
+      setSessionBreached(true);
+      preBreachWeightsRef.current = null;
+      setIsTextareaLocked(false);
+      setShowBreachModal(false);
+      setBreachFlashActive(false);
+      setShockwaveActive(false);
+      setSignalState("ai");
+    },
+    [appendEvent]
+  );
 
   const handleKeystroke = useCallback(() => {
+    if (isTextareaLocked) return;
+
     const now = Date.now();
     setHasSessionActivity(true);
 
@@ -155,12 +273,14 @@ export function useSignalMonitor() {
     } else if (charsPerSecond <= 6) {
       humanWeightRef.current += 0.15;
       aiWeightRef.current += 0.02;
-      updateSessionPercent();
+      setSessionHumanPercent(
+        computeHumanPercent(humanWeightRef.current, aiWeightRef.current)
+      );
       setSignalState("human");
     }
 
     lastKeystrokeRef.current = now;
-  }, [registerSignal, updateSessionPercent]);
+  }, [isTextareaLocked, registerSignal]);
 
   const resetSession = useCallback(() => {
     humanWeightRef.current = 1;
@@ -170,10 +290,17 @@ export function useSignalMonitor() {
     burstCharsRef.current = 0;
     recentCharsRef.current = [];
     pauseDetectedRef.current = false;
+    preBreachWeightsRef.current = null;
     setEvents([]);
     setSessionHumanPercent(100);
     setSignalState("human");
     setHasSessionActivity(false);
+    setIsTextareaLocked(false);
+    setShowBreachModal(false);
+    setShockwaveActive(false);
+    setSessionBreached(false);
+    setPasteWarning(null);
+    setBreachFlashActive(false);
 
     if (stateTimeoutRef.current) {
       clearTimeout(stateTimeoutRef.current);
@@ -190,7 +317,15 @@ export function useSignalMonitor() {
     sessionHumanPercent,
     sessionAiPercent: 100 - sessionHumanPercent,
     hasSessionActivity,
-    handlePaste,
+    isTextareaLocked,
+    showBreachModal,
+    shockwaveActive,
+    sessionBreached,
+    pasteWarning,
+    breachFlashActive,
+    processPaste,
+    resolveBreachRedo,
+    resolveBreachAccept,
     handleKeystroke,
     resetSession,
     getFinalHumanPercent,

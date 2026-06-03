@@ -1,17 +1,17 @@
-import type { SignalState } from "@/lib/useSignalMonitor";
-
-const PATTERNS: Record<Exclude<SignalState, "human">, number | number[]> = {
-  anomaly: [60, 40, 60],
-  ai: [100, 50, 100, 50, 160],
-};
-
-export function triggerDetectionHaptic(state: SignalState): void {
-  if (state === "human") return;
+export function triggerShockHaptic(): void {
   if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") {
     return;
   }
 
-  navigator.vibrate(PATTERNS[state]);
+  navigator.vibrate([200, 100, 200, 100, 400]);
+}
+
+export function triggerAnomalyHaptic(): void {
+  if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") {
+    return;
+  }
+
+  navigator.vibrate([60, 40, 60]);
 }
 
 export function hapticsSupported(): boolean {
