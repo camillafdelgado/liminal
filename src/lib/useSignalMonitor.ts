@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { triggerDetectionHaptic } from "@/lib/haptics";
 
 export type SignalState = "human" | "anomaly" | "ai";
 
@@ -68,6 +69,7 @@ export function useSignalMonitor() {
       setEvents((prev) => [entry, ...prev].slice(0, 50));
       setHasSessionActivity(true);
       setSignalState(state);
+      triggerDetectionHaptic(state);
 
       if (stateTimeoutRef.current) {
         clearTimeout(stateTimeoutRef.current);

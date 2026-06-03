@@ -101,6 +101,54 @@ export default function DashboardPage() {
           </div>
         )}
 
+        <Link
+          href="/detect"
+          className="group mb-10 block overflow-hidden rounded-xl border border-[var(--accent)]/40 bg-card/90 p-8 backdrop-blur-sm transition-all duration-300 glow-accent hover:border-[var(--accent)]/70 hover:bg-card"
+        >
+          <div className="flex flex-col items-center gap-8 md:flex-row md:items-center md:justify-between">
+            <div className="signal-ring-preview shrink-0">
+              <div
+                className="signal-ring signal-ring--outer signal-ring--human opacity-80"
+                aria-hidden
+              />
+              <div
+                className="signal-ring signal-ring--mid signal-ring--human opacity-90"
+                aria-hidden
+              />
+              <div
+                className="signal-ring signal-ring--inner signal-ring--human"
+                aria-hidden
+              />
+              <span className="signal-ring-preview__label font-mono text-[9px] uppercase tracking-[0.25em] text-[#6b8f71]">
+                live
+              </span>
+            </div>
+
+            <div className="flex-1 text-center md:text-left">
+              <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+                {"// primary.flow"}
+              </p>
+              <h2 className="mt-2 font-mono text-2xl font-medium text-[var(--accent)] glow-text md:text-3xl">
+                Signal Monitor
+              </h2>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+                Let the ring watch your work. Typing patterns, paste events, and
+                velocity bursts are scored automatically — no manual logging
+                required.
+              </p>
+            </div>
+
+            <div className="flex shrink-0 flex-col items-center gap-2">
+              <span className="inline-flex items-center justify-center rounded-md bg-[var(--accent)] px-8 py-3 font-mono text-xs uppercase tracking-widest text-primary-foreground transition-colors group-hover:bg-[var(--accent-muted)]">
+                Begin monitoring
+              </span>
+              <span className="font-mono text-[10px] text-muted-foreground">
+                recommended
+              </span>
+            </div>
+          </div>
+        </Link>
+
         <div className="grid gap-6 lg:grid-cols-12">
           <Card className="border-border/60 bg-card/80 backdrop-blur-sm lg:col-span-7">
             <CardHeader>
@@ -207,13 +255,13 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+            <Card className="border-border/40 bg-card/60 backdrop-blur-sm opacity-90">
               <CardHeader>
                 <CardTitle className="font-mono text-sm uppercase tracking-widest text-muted-foreground">
-                  Log today
+                  Manual override
                 </CardTitle>
                 <CardDescription>
-                  How much of today&apos;s creative work was yours?
+                  Fallback only — prefer Signal Monitor for automatic tracking
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -233,9 +281,10 @@ export default function DashboardPage() {
                 />
                 <Button
                   onClick={handleLogSubmit}
-                  className="w-full bg-[var(--accent)] font-mono text-xs uppercase tracking-widest text-primary-foreground hover:bg-[var(--accent-muted)]"
+                  variant="outline"
+                  className="w-full border-border font-mono text-xs uppercase tracking-widest hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/5"
                 >
-                  Commit entry
+                  Commit manual entry
                 </Button>
               </CardContent>
             </Card>
@@ -310,16 +359,10 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <footer className="mt-16 flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <footer className="mt-16 border-t border-border pt-6">
           <p className="font-mono text-xs text-muted-foreground">
             liminal v0.1 — the space between human and machine
           </p>
-          <Link
-            href="/detect"
-            className="font-mono text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-[var(--accent)]"
-          >
-            Signal Monitor →
-          </Link>
         </footer>
       </main>
     </div>

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { hapticsSupported } from "@/lib/haptics";
 import { useSignalMonitor, type SignalState } from "@/lib/useSignalMonitor";
 import { useUsageStore } from "@/lib/useUsageStore";
 
@@ -59,7 +60,12 @@ export default function SignalMonitorPage() {
   } = useSignalMonitor();
 
   const logRef = useRef<HTMLDivElement>(null);
+  const [hapticsReady, setHapticsReady] = useState(false);
   const belowPledge = sessionHumanPercent < monthlyPledge;
+
+  useEffect(() => {
+    setHapticsReady(hapticsSupported());
+  }, []);
 
   useEffect(() => {
     if (logRef.current) {
@@ -179,6 +185,9 @@ export default function SignalMonitorPage() {
           />
           <p className="mt-2 font-mono text-[10px] text-muted-foreground">
             Events captured in background. No data leaves this session.
+            {hapticsReady
+              ? " Haptic pulse on anomaly detection."
+              : " Haptic feedback available on supported mobile browsers."}
           </p>
         </section>
 

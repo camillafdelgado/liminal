@@ -145,6 +145,52 @@
   height: 160px;
 }
 
+.signal-ring-preview {
+  position: relative;
+  width: 9.5rem;
+  height: 9.5rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  isolation: isolate;
+}
+
+.signal-ring-preview .signal-ring--outer {
+  width: 7.25rem;
+  height: 7.25rem;
+  top: 50%;
+  left: 50%;
+  margin-top: -3.625rem;
+  margin-left: -3.625rem;
+}
+
+.signal-ring-preview .signal-ring--mid {
+  width: 5.625rem;
+  height: 5.625rem;
+  top: 50%;
+  left: 50%;
+  margin-top: -2.8125rem;
+  margin-left: -2.8125rem;
+}
+
+.signal-ring-preview .signal-ring--inner {
+  width: 4rem;
+  height: 4rem;
+  top: 50%;
+  left: 50%;
+  margin-top: -2rem;
+  margin-left: -2rem;
+}
+
+.signal-ring-preview__label {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
 .signal-ring--human {
   border-color: color-mix(in srgb, #6b8f71 50%, transparent);
   animation: ring-pulse-human 3.5s ease-in-out infinite;
